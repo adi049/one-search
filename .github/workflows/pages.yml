@@ -1,4 +1,5 @@
 name: Deploy OmniSearch AI to GitHub Pages
+# Trigger deployment after Pages settings are enabled
 
 on:
   push:
