@@ -1,0 +1,766 @@
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="OmniSearch AI — One search, every answer. Explore YouTube, ChatGPT, Google, and Meta AI from a single unified dashboard." />
+  <title>OmniSearch AI — One Search. Every Answer.</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Sora', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50:  '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe',
+              300: '#a5b4fc', 400: '#818cf8', 500: '#6366f1',
+              600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81',
+            },
+          },
+          keyframes: {
+            floaty:   { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-12px)' } },
+            shimmer:  { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } },
+            fadeUp:   { '0%': { opacity:0, transform:'translateY(16px)' }, '100%': { opacity:1, transform:'translateY(0)' } },
+            pulseDot: { '0%,100%': { opacity:'.4' }, '50%': { opacity:'1' } },
+            spin:     { '0%': { transform:'rotate(0deg)' }, '100%': { transform:'rotate(360deg)' } },
+          },
+          animation: {
+            floaty: 'floaty 6s ease-in-out infinite',
+            fadeUp: 'fadeUp .6s cubic-bezier(.16,1,.3,1) both',
+            pulseDot: 'pulseDot 1.4s ease-in-out infinite',
+            spin: 'spin 1s linear infinite',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --bg-soft: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e6e8ef;
+      --card: #ffffff;
+      --glass: rgba(255,255,255,0.7);
+    }
+    .dark {
+      --bg: #070710;
+      --bg-soft: #0d0d18;
+      --text: #f5f6fa;
+      --muted: #94a0b8;
+      --border: #1c1c2e;
+      --card: #10101c;
+      --glass: rgba(16,16,28,0.6);
+    }
+    html, body { background: var(--bg); color: var(--text); }
+    body { font-family: 'Inter', system-ui, sans-serif; }
+
+    /* Animated aurora background */
+    .aurora { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .aurora::before, .aurora::after {
+      content: ''; position: absolute; border-radius: 50%; filter: blur(90px);
+      opacity: .55; will-change: transform;
+    }
+    .aurora::before {
+      width: 620px; height: 620px; top: -180px; left: -120px;
+      background: radial-gradient(circle at 30% 30%, #6366f1, transparent 70%);
+      animation: floaty 9s ease-in-out infinite;
+    }
+    .aurora::after {
+      width: 560px; height: 560px; top: 40px; right: -160px;
+      background: radial-gradient(circle at 70% 30%, #ec4899, transparent 70%);
+      animation: floaty 11s ease-in-out infinite reverse;
+    }
+    .dark .aurora::before { background: radial-gradient(circle at 30% 30%, #4f46e5, transparent 70%); opacity: .4; }
+    .dark .aurora::after  { background: radial-gradient(circle at 70% 30%, #a21caf, transparent 70%); opacity: .4; }
+
+    /* Glass surfaces */
+    .glass {
+      background: var(--glass);
+      backdrop-filter: blur(18px) saturate(140%);
+      -webkit-backdrop-filter: blur(18px) saturate(140%);
+      border: 1px solid var(--border);
+    }
+    .card { background: var(--card); border: 1px solid var(--border); }
+
+    /* Search bar */
+    .search-shell {
+      background: var(--card);
+      border: 1px solid var(--border);
+      transition: box-shadow .35s ease, border-color .35s ease, transform .35s ease;
+    }
+    .search-shell:focus-within {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99,102,241,.18), 0 20px 60px -20px rgba(99,102,241,.55);
+      transform: translateY(-1px);
+    }
+    .gradient-text {
+      background: linear-gradient(100deg,#6366f1 0%,#a855f7 45%,#ec4899 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+
+    /* Chips */
+    .chip { border:1px solid var(--border); background: var(--card); transition: all .2s ease; }
+    .chip:hover { border-color:#6366f1; color:#6366f1; transform: translateY(-1px); }
+
+    /* Loading shimmer */
+    .shimmer {
+      background: linear-gradient(90deg, rgba(148,163,184,.08) 25%, rgba(148,163,184,.22) 50%, rgba(148,163,184,.08) 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s linear infinite;
+    }
+    @keyframes shimmer { 0% { background-position: -200% 0 } 100% { background-position: 200% 0 } }
+
+    /* Panel hover lift */
+    .panel { transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease; }
+    .panel:hover { transform: translateY(-3px); box-shadow: 0 24px 50px -28px rgba(0,0,0,.4); }
+
+    /* Scrollbar */
+    .panel-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .panel-scroll::-webkit-scrollbar-thumb { background: rgba(148,163,184,.35); border-radius: 999px; }
+    .panel-scroll::-webkit-scrollbar-track { background: transparent; }
+
+    /* Stagger */
+    .stagger > * { opacity: 0; animation: fadeUp .55s cubic-bezier(.16,1,.3,1) both; }
+    .stagger > *:nth-child(1){ animation-delay:.05s }
+    .stagger > *:nth-child(2){ animation-delay:.12s }
+    .stagger > *:nth-child(3){ animation-delay:.19s }
+    .stagger > *:nth-child(4){ animation-delay:.26s }
+
+    .typing span { display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor; margin:0 2px; }
+    .typing span:nth-child(2){ animation: pulseDot 1.4s ease-in-out .2s infinite; }
+    .typing span:nth-child(3){ animation: pulseDot 1.4s ease-in-out .4s infinite; }
+
+    a { -webkit-tap-highlight-color: transparent; }
+    .focus-ring:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-indigo-500/30">
+  <div class="aurora"></div>
+
+  <!-- ===================== NAV ===================== -->
+  <header class="sticky top-0 z-50 glass">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="#" onclick="resetToHome(); return false;" class="flex items-center gap-2.5 group focus-ring rounded-lg">
+          <div class="relative w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform">
+            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-pink-400 ring-2 ring-white/40 dark:ring-black/40"></span>
+          </div>
+          <div class="leading-tight">
+            <div class="font-display font-700 text-[15px] tracking-tight">OmniSearch<span class="gradient-text"> AI</span></div>
+            <div class="text-[10px] text-slate-500 dark:text-slate-400 -mt-0.5 hidden sm:block">One search · every answer</div>
+          </div>
+        </a>
+
+        <nav class="hidden md:flex items-center gap-1">
+          <button onclick="resetToHome()" class="px-3.5 py-2 text-sm font-medium rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-500/10 transition focus-ring">Home</button>
+          <button onclick="toggleHistory()" class="px-3.5 py-2 text-sm font-medium rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-500/10 transition focus-ring">History</button>
+          <button onclick="openDocs()" class="px-3.5 py-2 text-sm font-medium rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-500/10 transition focus-ring">Docs</button>
+        </nav>
+
+        <div class="flex items-center gap-2">
+          <button id="historyBtn" onclick="toggleHistory()" class="md:hidden p-2 rounded-lg hover:bg-slate-500/10 transition focus-ring" aria-label="History">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 3"/></svg>
+          </button>
+          <button id="themeToggle" onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-slate-500/10 transition focus-ring" aria-label="Toggle theme">
+            <svg id="iconMoon" class="w-5 h-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <svg id="iconSun" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="relative z-10">
+    <!-- ===================== HERO ===================== -->
+    <section id="hero" class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 sm:pt-20 pb-10 text-center">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium glass mb-6 animate-fadeUp">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulseDot"></span>
+        <span class="text-slate-600 dark:text-slate-300">Powered by 4 AI engines in one place</span>
+      </div>
+
+      <h1 class="font-display font-800 tracking-tight text-4xl sm:text-5xl lg:text-6xl leading-[1.05] animate-fadeUp">
+        One search.<br class="sm:hidden"> <span class="gradient-text">Every answer.</span>
+      </h1>
+      <p class="mt-5 text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto animate-fadeUp">
+        Query the entire web from a single bar — explore <strong class="text-rose-500">YouTube</strong>,
+        <strong class="text-emerald-500">ChatGPT</strong>, <strong class="text-blue-500">Google</strong>, and
+        <strong class="text-violet-500">Meta AI</strong> results side-by-side on one premium dashboard.
+      </p>
+
+      <!-- Search -->
+      <form id="searchForm" class="mt-9 max-w-3xl mx-auto animate-fadeUp" onsubmit="handleSearch(event)">
+        <div class="search-shell flex items-center gap-2 rounded-2xl p-2 sm:p-2.5 shadow-xl shadow-slate-900/5">
+          <div class="pl-2 sm:pl-3 text-slate-400">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          </div>
+          <input id="searchInput" type="text" autocomplete="off" spellcheck="false"
+            placeholder="Ask anything — e.g. How does Artificial Intelligence work?"
+            class="flex-1 bg-transparent outline-none text-[15px] sm:text-base font-medium placeholder:text-slate-400 placeholder:font-normal py-2" />
+          <button id="clearInput" type="button" onclick="clearInput()" class="hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+          <button type="submit"
+            class="shrink-0 inline-flex items-center gap-2 rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold text-white bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 hover:shadow-lg hover:shadow-indigo-500/40 active:scale-95 transition focus-ring">
+            <span class="hidden sm:inline">Search</span>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </form>
+
+      <!-- Suggested -->
+      <div class="mt-7 animate-fadeUp">
+        <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Try a suggested search</div>
+        <div id="suggested" class="flex flex-wrap gap-2 justify-center max-w-3xl mx-auto"></div>
+      </div>
+
+      <!-- History -->
+      <div id="historyWrap" class="mt-8 hidden animate-fadeUp">
+        <div class="glass rounded-2xl p-4 sm:p-5 max-w-3xl mx-auto text-left">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2 text-sm font-semibold">
+              <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 3"/></svg>
+              Recent searches
+            </div>
+            <button onclick="clearHistory()" class="text-xs font-medium text-rose-500 hover:text-rose-400 transition focus-ring rounded">Clear all</button>
+          </div>
+          <div id="historyChips" class="flex flex-wrap gap-2"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== RESULTS ===================== -->
+    <section id="results" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+      <!-- Result header -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div class="flex items-center gap-3 min-w-0">
+          <button onclick="resetToHome()" class="shrink-0 p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-500/10 transition focus-ring" aria-label="Back">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="min-w-0">
+            <div class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Showing results for</div>
+            <h2 id="resultQuery" class="font-display font-700 text-lg sm:text-2xl truncate gradient-text"></h2>
+          </div>
+        </div>
+        <button onclick="reRunCurrent()" class="self-start sm:self-auto inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition focus-ring">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      <!-- Panels grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 stagger">
+        <!-- YouTube -->
+        <article id="panel-youtube" class="panel card rounded-3xl overflow-hidden">
+          <div class="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800" style="background:linear-gradient(90deg, rgba(244,63,94,.08), transparent)">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center">
+                <svg class="w-6 h-6" viewBox="0 0 24 24"><path fill="#FF0000" d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1c.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8z"/><path fill="#fff" d="M9.6 15.6V8.4l6.2 3.6z"/></svg>
+              </div>
+              <div>
+                <div class="font-display font-700 text-base">YouTube</div>
+                <div class="text-xs text-slate-500">Videos & tutorials</div>
+              </div>
+            </div>
+            <a id="yt-open" href="#" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-500 hover:text-rose-400 transition">
+              Open
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg>
+            </a>
+          </div>
+          <div id="yt-body" class="panel-scroll p-5 sm:p-6 space-y-4 max-h-[640px] overflow-y-auto"></div>
+        </article>
+
+        <!-- ChatGPT -->
+        <article id="panel-gpt" class="panel card rounded-3xl overflow-hidden">
+          <div class="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800" style="background:linear-gradient(90deg, rgba(16,185,129,.08), transparent)">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path fill="#10a37f" d="M22.28 9.78a5.7 5.7 0 0 0-.5-4.7 5.8 5.8 0 0 0-6.27-2.7A5.8 5.8 0 0 0 7.4 1.9 5.8 5.8 0 0 0 1.6 7.3a5.8 5.8 0 0 0-3.1 7.7 5.9 5.9 0 0 0 .8 6.6 5.8 5.8 0 0 0 6.3 2.7 5.8 5.8 0 0 0 4.4 2 5.8 5.8 0 0 0 5.5-3.9 5.8 5.8 0 0 0 3.8-2.7 5.9 5.9 0 0 0 .0-6.6zM9.6 18.5l-1.3-1a5 5 0 0 1-3.5 1.3 5 5 0 0 1-3.8-1.8l1.4-1a3.3 3.3 0 0 0 4.9.4l1.3 1a3.4 3.4 0 0 1-2.6 1.4z"/></svg>
+              </div>
+              <div>
+                <div class="font-display font-700 text-base">ChatGPT</div>
+                <div class="text-xs text-slate-500">AI explanation</div>
+              </div>
+            </div>
+            <a id="gpt-open" href="#" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-500 hover:text-emerald-400 transition">
+              Open
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg>
+            </a>
+          </div>
+          <div id="gpt-body" class="panel-scroll p-5 sm:p-6 max-h-[640px] overflow-y-auto"></div>
+        </article>
+
+        <!-- Google -->
+        <article id="panel-google" class="panel card rounded-3xl overflow-hidden">
+          <div class="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800" style="background:linear-gradient(90deg, rgba(59,130,246,.08), transparent)">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center">
+                <svg class="w-6 h-6" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.2c0-.7-.1-1.4-.2-2.1H12v4h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2-1.9 3.3-4.7 3.3-7.9z"/><path fill="#34A853" d="M12 23c2.9 0 5.4-1 7.2-2.6l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.8 0-5.2-1.9-6.1-4.5H2.3v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.9 14.2a6.6 6.6 0 0 1 0-4.2V7.2H2.3a11 11 0 0 0 0 9.8l3.6-2.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .5 4.1 1.6l3.1-3.1A11 11 0 0 0 2.3 7.2l3.6 2.8C6.8 7.3 9.2 5.4 12 5.4z"/></svg>
+              </div>
+              <div>
+                <div class="font-display font-700 text-base">Google</div>
+                <div class="text-xs text-slate-500">Web results</div>
+              </div>
+            </div>
+            <a id="gg-open" href="#" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-500 hover:text-blue-400 transition">
+              Open
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg>
+            </a>
+          </div>
+          <div id="gg-body" class="panel-scroll p-5 sm:p-6 space-y-4 max-h-[640px] overflow-y-auto"></div>
+        </article>
+
+        <!-- Meta AI -->
+        <article id="panel-meta" class="panel card rounded-3xl overflow-hidden">
+          <div class="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800" style="background:linear-gradient(90deg, rgba(139,92,246,.08), transparent)">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-blue-500 shadow-sm flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" opacity=".3"/><path d="M7 8c2 4 8 4 10 0M7 16c2-4 8-4 10 0"/></svg>
+              </div>
+              <div>
+                <div class="font-display font-700 text-base">Meta AI</div>
+                <div class="text-xs text-slate-500">Assistant response</div>
+              </div>
+            </div>
+            <a id="meta-open" href="#" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-500 hover:text-violet-400 transition">
+              Open
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg>
+            </a>
+          </div>
+          <div id="meta-body" class="panel-scroll p-5 sm:p-6 max-h-[640px] overflow-y-auto"></div>
+        </article>
+      </div>
+
+      <!-- No-API notice -->
+      <div class="mt-8 glass rounded-2xl p-4 sm:p-5 flex items-start gap-3">
+        <div class="shrink-0 w-9 h-9 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        </div>
+        <div class="text-sm text-slate-600 dark:text-slate-300">
+          <p class="font-semibold text-slate-800 dark:text-slate-100">Demo mode — every panel deep-links to the real platform.</p>
+          <p class="mt-1 text-slate-500 dark:text-slate-400">Results shown are illustrative samples. Tap <span class="font-semibold">Open</span> on any panel to launch your query on the live platform in a new tab. Connect APIs in the source (see <button onclick="openDocs()" class="underline font-medium text-indigo-500 hover:text-indigo-400">Docs</button>) for live inline data.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== DOCS MODAL ===================== -->
+  <div id="docsModal" class="hidden fixed inset-0 z-[100] p-4 sm:p-6">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeDocs()"></div>
+    <div class="relative max-w-2xl mx-auto mt-6 mb-6 card rounded-3xl shadow-2xl max-h-[85vh] overflow-y-auto panel-scroll">
+      <div class="sticky top-0 glass flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+        <div class="flex items-center gap-2 font-display font-700">
+          <svg class="w-5 h-5 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+          Setup & Documentation
+        </div>
+        <button onclick="closeDocs()" class="p-2 rounded-lg hover:bg-slate-500/10 transition focus-ring" aria-label="Close">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-5 sm:p-6 space-y-6 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+        <section>
+          <h3 class="font-display font-700 text-base text-slate-900 dark:text-white mb-2">What is OmniSearch AI?</h3>
+          <p>A unified search dashboard. Enter one query and explore four providers — YouTube, ChatGPT, Google, and Meta AI — on a single page.</p>
+        </section>
+        <section>
+          <h3 class="font-display font-700 text-base text-slate-900 dark:text-white mb-2">Run locally</h3>
+          <ol class="list-decimal list-inside space-y-1.5">
+            <li>Save this file as <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs">index.html</code>.</li>
+            <li>Open it in a browser, or serve it: <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs">python3 -m http.server 8000</code></li>
+            <li>Visit <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs">http://localhost:8000</code></li>
+          </ol>
+        </section>
+        <section>
+          <h3 class="font-display font-700 text-base text-slate-900 dark:text-white mb-2">Connect live APIs (optional)</h3>
+          <p class="mb-2">Replace the <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs">generateMock*</code> functions with <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs">fetch</code> calls to a server-side proxy. Endpoints:</p>
+          <ul class="space-y-1.5 text-xs">
+            <li><code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">/api/youtube?q=</code> → items: title, channel, views, duration</li>
+            <li><code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">/api/chatgpt?q=</code> → { answer: string }</li>
+            <li><code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">/api/google?q=</code> → items: title, url, snippet</li>
+            <li><code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">/api/meta?q=</code> → { answer: string }</li>
+          </ul>
+          <p class="mt-2">Always proxy server-side to avoid CORS and protect API keys.</p>
+        </section>
+        <section>
+          <h3 class="font-display font-700 text-base text-slate-900 dark:text-white mb-2">Privacy</h3>
+          <p>Theme and search history are stored only in your browser's <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs">localStorage</code>. No account, no tracking, no external API calls in demo mode.</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="relative z-10 border-t border-slate-200 dark:border-slate-800/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-500">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500 to-pink-500"></div>
+        <span>OmniSearch AI · Built for the multi-engine web</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <button onclick="openDocs()" class="hover:text-slate-800 dark:hover:text-slate-200 transition">Docs</button>
+        <span>© <span id="year"></span></span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* =================== STATE =================== */
+    const STORAGE_HISTORY = 'omnisearch_history_v1';
+    const STORAGE_THEME    = 'omnisearch_theme_v1';
+    let currentQuery = '';
+
+    const SUGGESTIONS = [
+      'How does Artificial Intelligence work?',
+      'Best programming languages for beginners',
+      'Explain quantum physics simply',
+      'Digital marketing strategies 2024',
+      'Learn React in 2024',
+      'Healthy morning routines',
+    ];
+
+    /* =================== INIT =================== */
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Theme
+    const savedTheme = localStorage.getItem(STORAGE_THEME);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme === 'light' || (!savedTheme && !prefersDark)) {
+      document.documentElement.classList.remove('dark');
+    }
+    syncThemeIcon();
+
+    function syncThemeIcon() {
+      const dark = document.documentElement.classList.contains('dark');
+      document.getElementById('iconMoon').classList.toggle('hidden', !dark);
+      document.getElementById('iconSun').classList.toggle('hidden', dark);
+    }
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem(STORAGE_THEME, document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+      syncThemeIcon();
+    }
+
+    // Suggestions
+    const sugWrap = document.getElementById('suggested');
+    SUGGESTIONS.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'chip text-sm px-3.5 py-1.5 rounded-full text-slate-600 dark:text-slate-300 focus-ring';
+      b.textContent = s;
+      b.onclick = () => { document.getElementById('searchInput').value = s; handleSearch(new Event('submit')); };
+      sugWrap.appendChild(b);
+    });
+
+    renderHistory();
+    setupInputClear();
+
+    /* =================== SEARCH =================== */
+    function handleSearch(e) {
+      e.preventDefault();
+      const q = document.getElementById('searchInput').value.trim();
+      if (!q) return;
+      currentQuery = q;
+      saveHistory(q);
+      renderHistory();
+      runSearch(q);
+    }
+
+    function reRunCurrent() {
+      if (currentQuery) runSearch(currentQuery);
+    }
+
+    function runSearch(q) {
+      // Scroll to top of results
+      document.getElementById('hero').classList.add('hidden');
+      document.getElementById('results').classList.remove('hidden');
+      document.getElementById('resultQuery').textContent = q;
+
+      // Set external links (deep-link each platform with the query)
+      const enc = encodeURIComponent(q);
+      document.getElementById('yt-open').href   = `https://www.youtube.com/results?search_query=${enc}`;
+      document.getElementById('gpt-open').href   = `https://chat.openai.com/?q=${enc}`;
+      document.getElementById('gg-open').href   = `https://www.google.com/search?q=${enc}`;
+      document.getElementById('meta-open').href  = `https://www.meta.ai/`;
+
+      // Load each panel (mock)
+      loadYouTube(q);
+      loadChatGPT(q);
+      loadGoogle(q);
+      loadMeta(q);
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetToHome() {
+      document.getElementById('results').classList.add('hidden');
+      document.getElementById('hero').classList.remove('hidden');
+      document.getElementById('searchInput').value = '';
+      currentQuery = '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* =================== MOCK LOADERS =================== */
+    function showLoading(el, rows = 2, h = 16) {
+      el.innerHTML = '';
+      for (let i = 0; i < rows; i++) {
+        const d = document.createElement('div');
+        d.className = 'space-y-3';
+        d.innerHTML = `
+          <div class="shimmer h-${h} w-full rounded-xl"></div>
+          <div class="shimmer h-3 w-2/3 rounded"></div>
+          <div class="shimmer h-3 w-1/2 rounded"></div>`;
+        el.appendChild(d);
+      }
+    }
+
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function loadYouTube(q) {
+      const el = document.getElementById('yt-body');
+      showLoading(el, 2, 24);
+      await delay(700);
+      const items = generateYouTube(q);
+      el.innerHTML = '';
+      items.forEach(it => {
+        const c = document.createElement('div');
+        c.className = 'group cursor-pointer';
+        c.onclick = () => window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`, '_blank', 'noopener');
+        c.innerHTML = `
+          <div class="flex gap-3.5">
+            <div class="relative shrink-0 w-32 sm:w-40 aspect-video rounded-xl overflow-hidden bg-gradient-to-br from-rose-500/20 via-orange-500/15 to-amber-400/20 flex items-center justify-center group-hover:ring-2 group-hover:ring-rose-500/50 transition">
+              <div class="absolute inset-0 bg-gradient-to-br from-rose-600/30 to-purple-700/30"></div>
+              <svg class="w-9 h-9 text-white/90 drop-shadow relative z-10 group-hover:scale-110 transition" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="11" fill="rgba(0,0,0,.4)"/><path d="M10 8.5 16 12l-6 3.5z" fill="#fff"/></svg>
+              <span class="absolute bottom-1.5 right-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/80 text-white">${it.duration}</span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <h4 class="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-rose-500 transition">${it.title}</h4>
+              <div class="mt-1 text-xs text-slate-500">${it.channel}</div>
+              <div class="mt-0.5 text-xs text-slate-500">${it.views} views · ${it.time}</div>
+            </div>
+          </div>`;
+        el.appendChild(c);
+      });
+      const f = document.createElement('a');
+      f.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`;
+      f.target = '_blank'; f.rel = 'noopener';
+      f.className = 'mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-rose-500 hover:text-rose-400 transition';
+      f.innerHTML = `See all YouTube results <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+      el.appendChild(f);
+    }
+
+    function generateYouTube(q) {
+      return [
+        { title: `${q} — Full Course for Beginners (2024)`, channel: 'FreeCodeCamp', views: '1.4M', time: '2 weeks ago', duration: '12:45' },
+        { title: `${q} explained in 10 minutes`, channel: 'Simplilearn', views: '892K', time: '1 month ago', duration: '10:23' },
+        { title: `Understanding ${q} — Step by Step`, channel: 'Programming with Mosh', views: '534K', time: '3 days ago', duration: '24:10' },
+      ];
+    }
+
+    async function loadChatGPT(q) {
+      const el = document.getElementById('gpt-body');
+      el.innerHTML = `
+        <div class="flex items-center gap-2 text-emerald-500 mb-3">
+          <span class="typing"><span></span><span></span><span></span></span>
+          <span class="text-xs font-medium">ChatGPT is thinking…</span>
+        </div>`;
+      await delay(900);
+      const answer = generateGPTAnswer(q);
+      el.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="shrink-0 w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a3 3 0 0 0-3 3 3 3 0 0 0-3 3 3 3 0 0 0 0 6 3 3 0 0 0 3 3 3 3 0 0 0 6 0 3 3 0 0 0 3-3 3 3 0 0 0 0-6 3 3 0 0 0-3-3 3 3 0 0 0-3-3z"/></svg>
+          </div>
+          <div class="flex-1 text-sm leading-relaxed space-y-3">
+            ${answer}
+          </div>
+        </div>
+        <a href="https://chat.openai.com/?q=${encodeURIComponent(q)}" target="_blank" rel="noopener"
+           class="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition">
+          Continue this conversation in ChatGPT
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg>
+        </a>`;
+    }
+
+    function generateGPTAnswer(q) {
+      return `
+        <p>Great question! Here's a clear overview of <strong>${q}</strong>:</p>
+        <p>${q.charAt(0).toLowerCase() + q.slice(1)} is a broad topic that can be approached from multiple angles. At its core, it involves understanding the foundational concepts, the practical applications, and how it fits into the larger landscape.</p>
+        <p><strong>Key points to consider:</strong></p>
+        <ul class="list-disc list-inside space-y-1.5 pl-1">
+          <li><strong>Foundations:</strong> Start with the core principles and terminology.</li>
+          <li><strong>How it works:</strong> Understand the mechanisms and processes involved.</li>
+          <li><strong>Real-world use:</strong> Explore examples and case studies.</li>
+          <li><strong>Next steps:</strong> Practice with hands-on exercises and resources.</li>
+        </ul>
+        <p class="text-slate-500 dark:text-slate-400 text-xs italic">This is a sample AI response in demo mode. Open ChatGPT to get a full, live answer to your exact query.</p>`;
+    }
+
+    async function loadGoogle(q) {
+      const el = document.getElementById('gg-body');
+      showLoading(el, 3, 14);
+      await delay(600);
+      const items = generateGoogle(q);
+      el.innerHTML = '';
+      items.forEach(it => {
+        const c = document.createElement('a');
+        c.href = it.url; c.target = '_blank'; c.rel = 'noopener';
+        c.className = 'block group';
+        c.innerHTML = `
+          <div class="text-xs text-slate-500 flex items-center gap-2 mb-1">
+            <div class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[9px] font-bold">${it.displayUrl.charAt(0).toUpperCase()}</div>
+            <span class="truncate">${it.displayUrl}</span>
+          </div>
+          <h4 class="text-[17px] leading-snug font-medium text-blue-600 dark:text-blue-400 group-hover:underline">${it.title}</h4>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">${it.snippet}</p>`;
+        el.appendChild(c);
+      });
+      const f = document.createElement('a');
+      f.href = `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+      f.target = '_blank'; f.rel = 'noopener';
+      f.className = 'mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-500 hover:text-blue-400 transition';
+      f.innerHTML = `See all Google results <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+      el.appendChild(f);
+    }
+
+    function generateGoogle(q) {
+      const slug = q.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      return [
+        { title: `${q} — Wikipedia, the free encyclopedia`, displayUrl: `en.wikipedia.org › wiki › ${slug}`, url: `https://en.wikipedia.org/wiki/${slug.replace(/-/g,'_')}`, snippet: `${q} refers to a comprehensive topic with rich history and modern applications. This article covers definitions, background, and current developments.` },
+        { title: `${q}: A Complete Beginner's Guide (2024)`, displayUrl: `www.freecodecamp.org › news › ${slug}`, url: `https://www.freecodecamp.org/news/tag/${slug}`, snippet: `Learn ${q} from scratch. This guide walks you through the essentials with examples, tips, and free resources to get started today.` },
+        { title: `Top 10 Resources to Master ${q}`, displayUrl: `medium.com › @learn › ${slug}`, url: `https://medium.com/search?q=${encodeURIComponent(q)}`, snippet: `Curated list of the best tutorials, courses, books, and communities for anyone interested in ${q}. Updated for 2024.` },
+        { title: `r/${slug.replace(/-/g,'').slice(0,20) || 'learn'} — Reddit discussions on ${q}`, displayUrl: `www.reddit.com › r › learn`, url: `https://www.reddit.com/search/?q=${encodeURIComponent(q)}`, snippet: `Join thousands of learners discussing ${q}. Ask questions, share projects, and learn from the community.` },
+      ];
+    }
+
+    async function loadMeta(q) {
+      const el = document.getElementById('meta-body');
+      el.innerHTML = `
+        <div class="flex items-center gap-2 text-violet-500 mb-3">
+          <span class="typing"><span></span><span></span><span></span></span>
+          <span class="text-xs font-medium">Meta AI is responding…</span>
+        </div>`;
+      await delay(800);
+      el.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-white">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8c2 4 8 4 10 0M7 16c2-4 8-4 10 0"/></svg>
+          </div>
+          <div class="flex-1 text-sm leading-relaxed space-y-3">
+            <p>Here's a quick take on <strong>${q}</strong>:</p>
+            <p>${q} is widely discussed across communities. Meta AI can summarize it for you, suggest related topics, and help you go deeper with conversational follow-ups — all powered by Meta's Llama models.</p>
+            <p class="text-slate-500 dark:text-slate-400 text-xs italic">Demo response. Open Meta AI to chat live with your query.</p>
+          </div>
+        </div>
+        <a href="https://www.meta.ai/" target="_blank" rel="noopener"
+           class="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 hover:bg-violet-500/20 transition">
+          Ask Meta AI directly
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg>
+        </a>`;
+    }
+
+    /* =================== HISTORY =================== */
+    function saveHistory(q) {
+      let h = JSON.parse(localStorage.getItem(STORAGE_HISTORY) || '[]');
+      h = h.filter(x => x.toLowerCase() !== q.toLowerCase());
+      h.unshift(q);
+      h = h.slice(0, 8);
+      localStorage.setItem(STORAGE_HISTORY, JSON.stringify(h));
+    }
+
+    function renderHistory() {
+      const h = JSON.parse(localStorage.getItem(STORAGE_HISTORY) || '[]');
+      const wrap = document.getElementById('historyWrap');
+      const chips = document.getElementById('historyChips');
+      if (!h.length) { wrap.classList.add('hidden'); chips.innerHTML = ''; return; }
+      wrap.classList.remove('hidden');
+      chips.innerHTML = '';
+      h.forEach(q => {
+        const c = document.createElement('div');
+        c.className = 'chip group inline-flex items-center gap-2 pl-3 pr-1.5 py-1.5 rounded-full text-sm text-slate-600 dark:text-slate-300';
+        c.innerHTML = `
+          <button class="flex items-center gap-1.5 max-w-[220px] focus-ring rounded-full" onclick="repeatSearch('${q.replace(/'/g,"\\'")}')">
+            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            <span class="truncate">${q}</span>
+          </button>
+          <button onclick="removeHistoryItem('${q.replace(/'/g,"\\'")}')" class="p-1 rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition" aria-label="Remove">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>`;
+        chips.appendChild(c);
+      });
+    }
+
+    function repeatSearch(q) {
+      document.getElementById('searchInput').value = q;
+      handleSearch(new Event('submit'));
+    }
+
+    function removeHistoryItem(q) {
+      let h = JSON.parse(localStorage.getItem(STORAGE_HISTORY) || '[]');
+      h = h.filter(x => x !== q);
+      localStorage.setItem(STORAGE_HISTORY, JSON.stringify(h));
+      renderHistory();
+    }
+
+    function clearHistory() {
+      localStorage.removeItem(STORAGE_HISTORY);
+      renderHistory();
+    }
+
+    function toggleHistory() {
+      const w = document.getElementById('historyWrap');
+      const h = JSON.parse(localStorage.getItem(STORAGE_HISTORY) || '[]');
+      if (!h.length) {
+        flashHint('No search history yet — try a query first.');
+        return;
+      }
+      w.classList.toggle('hidden');
+      if (!w.classList.contains('hidden')) w.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function flashHint(msg) {
+      const t = document.createElement('div');
+      t.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] px-4 py-2.5 rounded-xl glass text-sm font-medium shadow-xl';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => { t.style.transition = 'all .3s'; t.style.opacity = '0'; t.style.transform = 'translate(-50%,8px)'; }, 1800);
+      setTimeout(() => t.remove(), 2200);
+    }
+
+    /* =================== INPUT CLEAR =================== */
+    function setupInputClear() {
+      const inp = document.getElementById('searchInput');
+      const clr = document.getElementById('clearInput');
+      inp.addEventListener('input', () => {
+        clr.classList.toggle('hidden', !inp.value);
+      });
+    }
+
+    function clearInput() {
+      const inp = document.getElementById('searchInput');
+      inp.value = ''; inp.focus();
+      document.getElementById('clearInput').classList.add('hidden');
+    }
+
+    /* =================== DOCS =================== */
+    function openDocs()  { document.getElementById('docsModal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+    function closeDocs() { document.getElementById('docsModal').classList.add('hidden'); document.body.style.overflow = ''; }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeDocs();
+      if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault(); document.getElementById('searchInput').focus();
+      }
+    });
+  </script>
+</body>
+</html>
